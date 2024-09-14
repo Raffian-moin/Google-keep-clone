@@ -1,6 +1,6 @@
-import Header from "./Header"
+import Header from "./layout/Header"
+import Sidebar from "./layout/Sidebar"
 import MainSection from "./MainSection"
-import Sidebar from "./Sidebar"
 
 function App() {
   return (

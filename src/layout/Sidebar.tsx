@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 
 const Sidebar = (): React.JSX.Element => {
     return (
@@ -30,13 +31,13 @@ const Sidebar = (): React.JSX.Element => {
                         <span className="material-icons mr-2">label</span>
                         Labels
                     </a>
-                    <a
-                        href="#"
+                    <NavLink
+                        to="/archive"
                         className="flex items-center p-2 text-gray-700 hover:bg-gray-200 rounded"
                     >
                         <span className="material-icons mr-2">archive</span>
                         Archive
-                    </a>
+                    </NavLink>
                     <a
                         href="#"
                         className="flex items-center p-2 text-gray-700 hover:bg-gray-200 rounded"
