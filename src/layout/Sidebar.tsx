@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import './../css/main.css';
 
 const Sidebar = (): React.JSX.Element => {
     return (
@@ -10,13 +11,13 @@ const Sidebar = (): React.JSX.Element => {
                     <span className="text-gray-700 font-medium">Keep</span>
                 </div>
                 <nav>
-                    <a
-                        href="#"
+                    <NavLink
+                        to="/"
                         className="flex items-center p-2 text-gray-700 hover:bg-gray-200 rounded"
                     >
                         <span className="material-icons mr-2">lightbulb</span>
                         Notes
-                    </a>
+                    </NavLink>
                     <a
                         href="#"
                         className="flex items-center p-2 text-gray-700 hover:bg-gray-200 rounded"
@@ -38,13 +39,14 @@ const Sidebar = (): React.JSX.Element => {
                         <span className="material-icons mr-2">archive</span>
                         Archive
                     </NavLink>
-                    <a
-                        href="#"
+
+                    <NavLink
+                        to="/trash"
                         className="flex items-center p-2 text-gray-700 hover:bg-gray-200 rounded"
                     >
                         <span className="material-icons mr-2">delete</span>
                         Trash
-                    </a>
+                    </NavLink>
                 </nav>
             </div>
         </aside>
