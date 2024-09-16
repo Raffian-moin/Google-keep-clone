@@ -54,7 +54,8 @@ const MainSection = () => {
         },
     ];
 
-    const handleIconClick = (attributes: IconClickAttributeInterface) => {
+    const handleIconClick = (e, attributes: IconClickAttributeInterface) => {
+        e.stopPropagation();
         const clickedButton = attributes.values;
         const noteID = attributes.noteid;
 
@@ -65,6 +66,7 @@ const MainSection = () => {
     }
 
     const handleNoteEdit = (e, noteID) => {
+        e.stopPropagation();
         setOpenEditNoteModal(true);
         setNoteCheckBoxes([]);
         setEditNote(null);
@@ -107,19 +109,19 @@ const MainSection = () => {
 
     const NoteIcons = ({ noteID }) => (
         <div className="flex justify-between items-center mt-2 text-gray-500">
-            <IconWrapper onClick={() => handleIconClick({ values: "REMINDER", noteid: noteID })}>
+            <IconWrapper onClick={(e) => handleIconClick(e, { values: "REMINDER", noteid: noteID })}>
                 <BsBellFill className="cursor-pointer hover:text-gray-700" />
             </IconWrapper>
-            <IconWrapper onClick={() => handleIconClick({ values: "COLLABORATION", noteid: noteID })}>
+            <IconWrapper onClick={(e) => handleIconClick(e, { values: "COLLABORATION", noteid: noteID })}>
                 <BsPersonPlusFill className="cursor-pointer hover:text-gray-700" />
             </IconWrapper>
-            <IconWrapper onClick={() => handleIconClick({ values: "BACKGROUND", noteid: noteID })}>
+            <IconWrapper onClick={(e) => handleIconClick(e, { values: "BACKGROUND", noteid: noteID })}>
                 <BsPaletteFill className="cursor-pointer hover:text-gray-700" />
             </IconWrapper>
-            <IconWrapper onClick={() => handleIconClick({ values: "IMAGE", noteid: noteID })}>
+            <IconWrapper onClick={(e) => handleIconClick(e, { values: "IMAGE", noteid: noteID })}>
                 <BsImageFill className="cursor-pointer hover:text-gray-700" />
             </IconWrapper>
-            <IconWrapper onClick={() => handleIconClick({ values: "ARCHIVE", noteid: noteID })}>
+            <IconWrapper onClick={(e) => handleIconClick(e, { values: "ARCHIVE", noteid: noteID })}>
                 <BiSolidArchiveIn className="cursor-pointer hover:text-gray-700" />
             </IconWrapper>
             <IconWrapper onClick={(e: React.SyntheticEvent) => toggleDropdown(noteID, e)}>
