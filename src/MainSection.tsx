@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { BiSolidArchiveIn } from "react-icons/bi";
-import { BsBellFill, BsImageFill, BsPaletteFill, BsPersonPlusFill, BsThreeDotsVertical } from "react-icons/bs";
-import NoteModal from "./NoteModal";
-import { useImmer } from 'use-immer'
+import { BsBellFill, BsCheck, BsImageFill, BsPaletteFill, BsPersonPlusFill, BsThreeDotsVertical } from "react-icons/bs";
+import { useImmer } from 'use-immer';
+import AddNote from "./modal/AddNote";
+import EditNote from "./modal/EditNote";
 
 const MainSection = () => {
     interface Notes {
@@ -17,25 +18,39 @@ const MainSection = () => {
         noteid: number;
     }
 
-    const [open, setOpen] = useImmer<boolean>(false);
-    const [activeDropdown, setActiveDropdown] = useImmer<boolean>(false);
+    const [openAddNoteModal, setOpenAddNoteModal] = useImmer<boolean>(false);
+    const [openEditNoteModal, setOpenEditNoteModal] = useImmer<boolean>(false);
+    const [editNote, setEditNote] = useImmer(null);
+    const [activeDropdown, setActiveDropdown] = useImmer<number | null>(null);
     const [notes, setNotes] = useImmer<Notes[]>([]);
     const dropdownRef = useRef<null | HTMLDivElement>(null);
+    const [noteCheckBoxes, setNoteCheckBoxes] = useImmer([]);
 
     const handleNoteArea = () => {
-        setOpen(true);
+        setOpenAddNoteModal(true);
     };
 
     const staticNotes = [
         {
             id: 1,
             title: "First note",
-            body: "whatever"
+            body: [
+                {
+                    id: 1,
+                    item: 'one',
+                },
+                {
+                    id: 2,
+                    item: 'two',
+                }
+            ],
+            is_checkbox: true
         },
         {
             id: 2,
             title: "Second note",
-            body: "whatever 2"
+            body: "whatever 2",
+            is_checkbox: false
         },
     ];
 
@@ -47,6 +62,19 @@ const MainSection = () => {
             const unarchivedNotes = notes.filter((note) => note.id !== noteID);
             setNotes(unarchivedNotes);
         }
+    }
+
+    const handleNoteEdit = (e, noteID) => {
+        setOpenEditNoteModal(true);
+        setNoteCheckBoxes([]);
+        setEditNote(null);
+        const note = staticNotes.find((item) => item.id === noteID);
+        if (note.is_checkbox) {
+            setNoteCheckBoxes(note.body)
+        } else {
+            setEditNote(note);
+        }
+
     }
 
     useEffect(() => {
@@ -126,15 +154,30 @@ const MainSection = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {notes.map((note) => (
-                        <div key={note.id} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 relative">
-                            <h2 className="text-xl font-semibold mb-2">{note.title}</h2>
-                            <p className="text-gray-600">{note.body}</p>
-                            <NoteIcons noteID={note.id} />
+                        <div key={note.id} className="relative group" onClick={(e) => handleNoteEdit(e, note.id)}>
+                            <div className="absolute -top-2 -left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <div className="bg-black rounded-full p-1 shadow-md">
+                                    <BsCheck className="text-white text-xl" />
+                                </div>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                                <h2 className="text-xl font-semibold mb-2">{note.title}</h2>
+                                <p className="text-gray-600">{note.is_checkbox ?? note.body}</p>
+                                <NoteIcons noteID={note.id} />
+                            </div>
                         </div>
                     ))}
                 </div>
             </main>
-            <NoteModal open={open} setOpen={setOpen} />
+            <AddNote open={openAddNoteModal} setOpen={setOpenAddNoteModal} />
+            <EditNote
+                open={openEditNoteModal}
+                setOpen={setOpenEditNoteModal}
+                noteCheckBoxes={noteCheckBoxes}
+                setNoteCheckBoxes={setNoteCheckBoxes}
+                editNote={editNote}
+                setEditNote={setEditNote}
+            />
         </>
     );
 };
