@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.tsx';
 import Archive from './Archive.tsx';
+import Trash from './Trash.tsx';
 
 const router = createBrowserRouter([
   {
@@ -12,6 +13,10 @@ const router = createBrowserRouter([
   {
     path: "/archive",
     element: <Archive />,
+  },
+  {
+    path: "/trash",
+    element: <Trash />,
   },
 ]);
 
