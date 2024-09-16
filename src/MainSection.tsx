@@ -80,7 +80,7 @@ const MainSection = () => {
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setActiveDropdown(false);
+                setActiveDropdown(null);
             }
         };
 
@@ -96,7 +96,7 @@ const MainSection = () => {
 
     const toggleDropdown = (noteId: number, event: React.SyntheticEvent) => {
         event.stopPropagation();
-        setActiveDropdown(activeDropdown === true ? false : true);
+        setActiveDropdown(activeDropdown === noteId ? null : noteId);
     };
 
     const IconWrapper = ({ children, onClick }) => (
@@ -125,7 +125,7 @@ const MainSection = () => {
             <IconWrapper onClick={(e: React.SyntheticEvent) => toggleDropdown(noteID, e)}>
                 <BsThreeDotsVertical className="cursor-pointer hover:text-gray-700" />
             </IconWrapper>
-            {activeDropdown === true && (
+            {activeDropdown === noteID && (
                 <div ref={dropdownRef} className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
                     <div className="py-1">
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Delete note</button>
