@@ -79,6 +79,19 @@ const MainSection = () => {
 
     }
 
+    const handleSelectNote = (e, noteID) => {
+        e.stopPropagation();
+        console.log('selected notes');
+    }
+
+    const handleDeleteNote = (e, noteID) => {
+        e.stopPropagation();
+        setNotes((draft) => {
+            const index = draft.findIndex((item) => item.id === noteID);
+            draft.splice(index, 1)
+        });
+    }
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -130,7 +143,7 @@ const MainSection = () => {
             {activeDropdown === noteID && (
                 <div ref={dropdownRef} className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
                     <div className="py-1">
-                        <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Delete note</button>
+                        <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={(e) => handleDeleteNote(e, noteID)}>Delete note</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Add label</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Add drawing</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Make a copy</button>
@@ -157,7 +170,7 @@ const MainSection = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {notes.map((note) => (
                         <div key={note.id} className="relative group" onClick={(e) => handleNoteEdit(e, note.id)}>
-                            <div className="absolute -top-2 -left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <div className="absolute -top-2 -left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={(e) => handleSelectNote(e, note.id)}>
                                 <div className="bg-black rounded-full p-1 shadow-md">
                                     <BsCheck className="text-white text-xl" />
                                 </div>
