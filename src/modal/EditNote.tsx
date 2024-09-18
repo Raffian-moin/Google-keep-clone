@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
-import { RxCross1 } from "react-icons/rx";
-import { useImmer } from 'use-immer';
+import React, { useRef } from 'react';
 import { GoPlus } from "react-icons/go";
+import { RxCross1 } from "react-icons/rx";
 
 
 type Props = {
@@ -11,34 +10,42 @@ type Props = {
 };
 
 export default function EditNote({ open, setOpen, setEditNote, editNote, setNoteCheckBoxes, noteCheckBoxes }: Props) {
+    const addNewItemRef = useRef(null);
 
     const handleNoteSave = () => {
         setOpen(false)
     }
 
     const handleAddNewItem = (e) => {
-        console.log(e.key === "Enter");
+        e.stopPropagation();
+        setNoteCheckBoxes((draft) => {
+            draft.push({ sort_order: noteCheckBoxes.length + 1, item: e.target.value });
+        });
+
+        addNewItemRef.current.value = '';
     }
 
     const handleItemDelete = (e, checkboxID: number) => {
-        // console.log(checkboxID);
         setNoteCheckBoxes((draft) => {
-            const index = draft.findIndex((item) => item.id === checkboxID);
+            const index = draft.findIndex((item) => item.sort_order === checkboxID);
             draft.splice(index, 1)
         });
     }
 
     const handleItemChange = (e, checkboxID: number) => {
-        console.log(checkboxID);
         e.stopPropagation();
         setNoteCheckBoxes((draft) => {
-            const currentItem = draft.find((item) => item.id === checkboxID);
+            const currentItem = draft.find((item) => item.sort_order === checkboxID);
             currentItem.item = e.target.value;
         });
     }
 
-
-
+    const handleKeyDown = (e, checkboxID: number) => {
+        e.stopPropagation();
+        if (e.key === "Enter") {
+            console.log('Insert new item');
+        }
+    }
 
     return (
         <Dialog open={open} onClose={setOpen} className="relative z-10">
@@ -56,7 +63,7 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                         {noteCheckBoxes.length > 0 && (
                             <>
                                 {noteCheckBoxes.map((checkbox) => (
-                                    <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4" key={checkbox.id}>
+                                    <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4" key={checkbox.sort_order}>
                                         {/* First Div */}
                                         <div className="flex items-center w-full max-w-md mx-auto bg-white border border-gray-300 rounded-md shadow-sm">
                                             <div className="flex items-center justify-center pl-3">
@@ -70,11 +77,12 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                                                 className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
                                                 placeholder="Search..."
                                                 value={checkbox.item}
-                                                onChange={(e) => handleItemChange(e, checkbox.id)}
+                                                onChange={(e) => handleItemChange(e, checkbox.sort_order)}
+                                                onKeyDown={(e) => handleKeyDown(e, checkbox.sort_order)}
                                             />
                                             <button
                                                 className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
-                                                onClick={(e) => handleItemDelete(e, checkbox.id)}
+                                                onClick={(e) => handleItemDelete(e, checkbox.sort_order)}
                                             >
                                                 <RxCross1 size={18} />
                                             </button>
@@ -86,7 +94,7 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                                 <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                                     <div
                                         className="flex items-center w-full max-w-md mx-auto bg-white border border-gray-300 rounded-md shadow-sm"
-                                        onKeyDown={handleAddNewItem}
+                                        onChange={(e) => handleAddNewItem(e)}
                                     >
                                         <div className="flex items-center justify-center pl-3">
                                             <GoPlus size={18} />
@@ -95,6 +103,7 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                                             type="text"
                                             className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
                                             placeholder="Search..."
+                                            ref={addNewItemRef}
                                         />
                                     </div>
                                 </div>
