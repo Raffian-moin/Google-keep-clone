@@ -1,7 +1,8 @@
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { GoPlus } from "react-icons/go";
 import { RxCross1 } from "react-icons/rx";
+import { useImmer } from 'use-immer';
 
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
 
 export default function EditNote({ open, setOpen, setEditNote, editNote, setNoteCheckBoxes, noteCheckBoxes }: Props) {
     const addNewItemRef = useRef(null);
+    const inputRef = useRef(null);
+    const [currentItemID, SetCurrentItemID] = useImmer(null);
 
     const handleNoteSave = () => {
         setOpen(false)
@@ -22,6 +25,7 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
             draft.push({ sort_order: noteCheckBoxes.length + 1, item: e.target.value });
         });
 
+        SetCurrentItemID(noteCheckBoxes.length + 1);
         addNewItemRef.current.value = '';
     }
 
@@ -46,6 +50,23 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
             console.log('Insert new item');
         }
     }
+
+    function getMap() {
+        if (!inputRef.current) {
+            inputRef.current = new Map();
+        }
+        return inputRef.current;
+    }
+
+
+    useEffect(() => {
+        const map = getMap();
+        const currentInputItem = map.get(currentItemID);
+        if (currentInputItem) {
+            currentInputItem?.focus();
+        }
+
+    }, [currentItemID]);
 
     return (
         <Dialog open={open} onClose={setOpen} className="relative z-10">
@@ -79,6 +100,14 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                                                 value={checkbox.item}
                                                 onChange={(e) => handleItemChange(e, checkbox.sort_order)}
                                                 onKeyDown={(e) => handleKeyDown(e, checkbox.sort_order)}
+                                                ref={(node) => {
+                                                    const map = getMap();
+                                                    if (node) {
+                                                        map.set(checkbox.sort_order, node);
+                                                    } else {
+                                                        map.delete(checkbox.sort_order);
+                                                    }
+                                                }}
                                             />
                                             <button
                                                 className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
@@ -102,7 +131,7 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                                         <input
                                             type="text"
                                             className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
-                                            placeholder="Search..."
+                                            placeholder="List item"
                                             ref={addNewItemRef}
                                         />
                                     </div>
