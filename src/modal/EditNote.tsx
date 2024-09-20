@@ -1,9 +1,7 @@
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import React, { useEffect, useRef } from 'react';
-import { GoPlus } from "react-icons/go";
 import { RxCross1 } from "react-icons/rx";
 import { useImmer } from 'use-immer';
-
 
 type Props = {
     open: boolean;
@@ -12,8 +10,8 @@ type Props = {
 
 export default function EditNote({ open, setOpen, setEditNote, editNote, setNoteCheckBoxes, noteCheckBoxes }: Props) {
     const addNewItemRef = useRef(null);
-    const inputRef = useRef(null);
-    const [currentItemID, SetCurrentItemID] = useImmer(null);
+    const noteCheckBoxItemRef = useRef(null);
+    const [currentCheckboxID, SetCurrentCheckboxID] = useImmer(null);
 
     const handleNoteSave = () => {
         setOpen(false)
@@ -21,11 +19,12 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
 
     const handleAddNewItem = (e) => {
         e.stopPropagation();
+        const sortOrder = noteCheckBoxes[noteCheckBoxes.length - 1].sort_order + 1;
         setNoteCheckBoxes((draft) => {
-            draft.push({ sort_order: noteCheckBoxes.length + 1, item: e.target.value });
+            draft.push({ sort_order: sortOrder, item: e.target.value });
         });
 
-        SetCurrentItemID(noteCheckBoxes.length + 1);
+        SetCurrentCheckboxID(sortOrder);
         addNewItemRef.current.value = '';
     }
 
@@ -44,29 +43,62 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
         });
     }
 
-    const handleKeyDown = (e, checkboxID: number) => {
+    const handleKeyDown = (e, checkboxID: number, key: number) => {
         e.stopPropagation();
         if (e.key === "Enter") {
-            console.log('Insert new item');
+            if (noteCheckBoxes.length === key + 1) {
+                addNewItemRef.current.focus();
+            } else {
+                const index = noteCheckBoxes.findIndex((item) => item.sort_order === checkboxID);
+
+                const currentCheckboxItem = {
+                    sort_order: checkboxID + 1,
+                    item: ''
+                };
+
+                if ((noteCheckBoxes[index + 1].sort_order - checkboxID) === 1) {
+                    const firstHalf = noteCheckBoxes.slice(0, index + 1);   // Elements before the index
+                    const secondHalf = noteCheckBoxes.slice(index + 1);     // Elements from the index onwards
+
+                    let incrementedSortOrder = 10;
+                    const updatedSecondHalf = secondHalf.map((item, idx) => {
+                        if (idx === 0) {
+                            incrementedSortOrder += secondHalf[idx].sort_order
+                            return { ...item, sort_order: incrementedSortOrder };
+                        } else {
+                            incrementedSortOrder += 1
+                            return { ...item, sort_order: incrementedSortOrder };
+                        }
+                    });
+
+                    setNoteCheckBoxes([...firstHalf, currentCheckboxItem, ...updatedSecondHalf]);
+                } else {
+                    setNoteCheckBoxes((draft) => {
+                        draft.splice(index + 1, 0, currentCheckboxItem);
+                    });
+                }
+
+                SetCurrentCheckboxID(checkboxID + 1);
+            }
         }
     }
 
     function getMap() {
-        if (!inputRef.current) {
-            inputRef.current = new Map();
+        if (!noteCheckBoxItemRef.current) {
+            noteCheckBoxItemRef.current = new Map();
         }
-        return inputRef.current;
+        return noteCheckBoxItemRef.current;
     }
 
 
     useEffect(() => {
         const map = getMap();
-        const currentInputItem = map.get(currentItemID);
+        const currentInputItem = map.get(currentCheckboxID);
         if (currentInputItem) {
             currentInputItem?.focus();
         }
 
-    }, [currentItemID]);
+    }, [currentCheckboxID]);
 
     return (
         <Dialog open={open} onClose={setOpen} className="relative z-10">
@@ -83,7 +115,7 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                     >
                         {noteCheckBoxes.length > 0 && (
                             <>
-                                {noteCheckBoxes.map((checkbox) => (
+                                {noteCheckBoxes.map((checkbox, index) => (
                                     <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4" key={checkbox.sort_order}>
                                         {/* First Div */}
                                         <div className="flex items-center w-full max-w-md mx-auto bg-white border border-gray-300 rounded-md shadow-sm">
@@ -96,10 +128,10 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                                             <input
                                                 type="text"
                                                 className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
-                                                placeholder="Search..."
+                                                placeholder="List item"
                                                 value={checkbox.item}
                                                 onChange={(e) => handleItemChange(e, checkbox.sort_order)}
-                                                onKeyDown={(e) => handleKeyDown(e, checkbox.sort_order)}
+                                                onKeyDown={(e) => handleKeyDown(e, checkbox.sort_order, index)}
                                                 ref={(node) => {
                                                     const map = getMap();
                                                     if (node) {
@@ -125,9 +157,6 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                                         className="flex items-center w-full max-w-md mx-auto bg-white border border-gray-300 rounded-md shadow-sm"
                                         onChange={(e) => handleAddNewItem(e)}
                                     >
-                                        <div className="flex items-center justify-center pl-3">
-                                            <GoPlus size={18} />
-                                        </div>
                                         <input
                                             type="text"
                                             className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
