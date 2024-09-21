@@ -4,6 +4,7 @@ import { BsBellFill, BsCheck, BsImageFill, BsPaletteFill, BsPersonPlusFill, BsTh
 import { useImmer } from 'use-immer';
 import AddNote from "./modal/AddNote";
 import EditNote from "./modal/EditNote";
+import JSONNoteData from './data.json'
 
 const MainSection = () => {
     interface Notes {
@@ -30,30 +31,6 @@ const MainSection = () => {
         setOpenAddNoteModal(true);
     };
 
-    const staticNotes = [
-        {
-            id: 1,
-            title: "First note",
-            body: [
-                {
-                    id: 1,
-                    item: 'one',
-                },
-                {
-                    id: 2,
-                    item: 'two',
-                }
-            ],
-            is_checkbox: true
-        },
-        {
-            id: 2,
-            title: "Second note",
-            body: "whatever 2",
-            is_checkbox: false
-        },
-    ];
-
     const handleIconClick = (e, attributes: IconClickAttributeInterface) => {
         e.stopPropagation();
         const clickedButton = attributes.values;
@@ -70,7 +47,7 @@ const MainSection = () => {
         setOpenEditNoteModal(true);
         setNoteCheckBoxes([]);
         setEditNote(null);
-        const note = staticNotes.find((item) => item.id === noteID);
+        const note = JSONNoteData.find((item) => item.id === noteID);
         if (note.is_checkbox) {
             setNoteCheckBoxes(note.body)
         } else {
@@ -106,7 +83,7 @@ const MainSection = () => {
     }, []);
 
     useEffect(() => {
-        setNotes(staticNotes);
+        setNotes(JSONNoteData);
     }, []);
 
     const toggleDropdown = (noteId: number, event: React.SyntheticEvent) => {
@@ -177,7 +154,7 @@ const MainSection = () => {
                             </div>
                             <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
                                 <h2 className="text-xl font-semibold mb-2">{note.title}</h2>
-                                <p className="text-gray-600">{note.is_checkbox ?? note.body}</p>
+                                <p className="text-gray-600">{note.is_checkbox === false ? note.body.replace(/^(.{200}[^\s]*).*/, "$1") : ''}</p>
                                 <NoteIcons noteID={note.id} />
                             </div>
                         </div>

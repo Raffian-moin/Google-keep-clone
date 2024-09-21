@@ -1,5 +1,6 @@
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import React, { useEffect, useRef } from 'react';
+import { GoChevronDown, GoChevronRight } from 'react-icons/go';
 import { RxCross1 } from "react-icons/rx";
 import { useImmer } from 'use-immer';
 
@@ -12,6 +13,10 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
     const addNewItemRef = useRef(null);
     const noteCheckBoxItemRef = useRef(null);
     const [currentCheckboxID, SetCurrentCheckboxID] = useImmer(null);
+    const [isCompletedTasksCollapsed, SetIsCompletedTasksCollapsed] = useImmer(false);
+
+    const incompletedTasks = (noteCheckBoxes.filter((item) => item.is_checked === false));
+    const completedTasks = (noteCheckBoxes.filter((item) => item.is_checked === true));
 
     const handleNoteSave = () => {
         setOpen(false)
@@ -19,13 +24,16 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
 
     const handleAddNewItem = (e) => {
         e.stopPropagation();
-        const sortOrder = noteCheckBoxes[noteCheckBoxes.length - 1].sort_order + 1;
-        setNoteCheckBoxes((draft) => {
-            draft.push({ sort_order: sortOrder, item: e.target.value });
-        });
+        const character = e.target.value
+        if (character) {
+            const sortOrder = noteCheckBoxes[noteCheckBoxes.length - 1].sort_order + 1;
+            setNoteCheckBoxes((draft) => {
+                draft.push({ sort_order: sortOrder, item: character, is_checked: false });
+            });
 
-        SetCurrentCheckboxID(sortOrder);
-        addNewItemRef.current.value = '';
+            SetCurrentCheckboxID(sortOrder);
+            addNewItemRef.current.value = '';
+        }
     }
 
     const handleItemDelete = (e, checkboxID: number) => {
@@ -45,15 +53,22 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
 
     const handleKeyDown = (e, checkboxID: number, key: number) => {
         e.stopPropagation();
+        // If user hits enter button then add a new input field below
         if (e.key === "Enter") {
-            if (noteCheckBoxes.length === key + 1) {
+            // If user hits enter on incompleted last input field then do not add a new field below
+            // because there is already an open input field
+            if (incompletedTasks[incompletedTasks.length - 1].sort_order === checkboxID) {
                 addNewItemRef.current.focus();
             } else {
+                // always add a new input field
+                // user hits enter button to insert between checkboxes or from the last checkbox of incomplete checkbox
+
                 const index = noteCheckBoxes.findIndex((item) => item.sort_order === checkboxID);
 
                 const currentCheckboxItem = {
                     sort_order: checkboxID + 1,
-                    item: ''
+                    item: '',
+                    is_checked: noteCheckBoxes[index].is_checked ?? false,
                 };
 
                 if ((noteCheckBoxes[index + 1].sort_order - checkboxID) === 1) {
@@ -90,6 +105,16 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
         return noteCheckBoxItemRef.current;
     }
 
+    const handleCheckBox = (e, checkboxID) => {
+        setNoteCheckBoxes((draft) => {
+            const currentItem = draft.find((item) => item.sort_order === checkboxID);
+            currentItem.is_checked = !currentItem.is_checked;
+        });
+    }
+
+    const handleCompletedTaskSectionCollapse = () => {
+        SetIsCompletedTasksCollapsed(!isCompletedTasksCollapsed);
+    }
 
     useEffect(() => {
         const map = getMap();
@@ -102,33 +127,25 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
 
     return (
         <Dialog open={open} onClose={setOpen} className="relative z-10">
-            <DialogBackdrop
-                transition
-                className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
-            />
-
-            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-                <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <DialogPanel
-                        transition
-                        className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-lg data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
-                    >
-                        {noteCheckBoxes.length > 0 && (
-                            <>
-                                {noteCheckBoxes.map((checkbox, index) => (
-                                    <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4" key={checkbox.sort_order}>
-                                        {/* First Div */}
-                                        <div className="flex items-center w-full max-w-md mx-auto bg-white border border-gray-300 rounded-md shadow-sm">
+            <DialogBackdrop className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            <div className="fixed inset-0 z-10 overflow-y-auto">
+                <div className="flex min-h-full items-center justify-center p-4 text-center">
+                    <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                        <div className="mt-2 space-y-2">
+                            {noteCheckBoxes.length > 0 && (
+                                <>
+                                    {incompletedTasks.map((checkbox, index) => (
+                                        <div key={checkbox.sort_order} className="flex items-center space-x-2 border">
                                             <div className="flex items-center justify-center pl-3">
                                                 <input
                                                     type="checkbox"
                                                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    onClick={(e) => handleCheckBox(e, checkbox.sort_order)}
                                                 />
                                             </div>
                                             <input
                                                 type="text"
                                                 className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
-                                                placeholder="List item"
                                                 value={checkbox.item}
                                                 onChange={(e) => handleItemChange(e, checkbox.sort_order)}
                                                 onKeyDown={(e) => handleKeyDown(e, checkbox.sort_order, index)}
@@ -148,53 +165,100 @@ export default function EditNote({ open, setOpen, setEditNote, editNote, setNote
                                                 <RxCross1 size={18} />
                                             </button>
                                         </div>
-                                    </div>
-                                ))}
-
-                                {/* Second Div, printed once after the loop */}
-                                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                                    <div
-                                        className="flex items-center w-full max-w-md mx-auto bg-white border border-gray-300 rounded-md shadow-sm"
-                                        onChange={(e) => handleAddNewItem(e)}
-                                    >
+                                    ))}
+                                    <div className="border">
                                         <input
-                                            type="text"
-                                            className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
-                                            placeholder="List item"
                                             ref={addNewItemRef}
+                                            type="text"
+                                            placeholder="List item"
+                                            onChange={(e) => handleAddNewItem(e)}
+                                            className="w-full text-sm focus:outline-none px-4 py-2"
                                         />
                                     </div>
-                                </div>
-                            </>
-                        )}
+                                    {completedTasks.length > 0 && (
+                                        <>
+                                            <hr className="my-4 border-gray-200" />
+                                            <div className="mt-2 space-y-2">
+                                                <button
+                                                    onClick={(e) => handleCompletedTaskSectionCollapse(e)}
+                                                    className="flex items-center text-sm font-medium text-gray-900"
+                                                >
+                                                    {isCompletedTasksCollapsed ? (
+                                                        <GoChevronDown />
+                                                    )  :
+                                                        <GoChevronRight />
+                                                    }
+                                                    <span className="ml-2">
+                                                        {completedTasks.length} completed item(s)
+                                                    </span>
+                                                </button>
 
+                                                {isCompletedTasksCollapsed && completedTasks.map((completedTask, index) => (
+                                                    <div key={completedTask.sort_order} className="flex items-center space-x-2 border">
+                                                        <div className="flex items-center justify-center pl-3">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                onChange={(e) => handleCheckBox(e, completedTask.sort_order)}
+                                                                checked={true}
+                                                            />
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0 line-through"
+                                                            value={completedTask.item}
+                                                            onChange={(e) => handleItemChange(e, completedTask.sort_order)}
+                                                            onKeyDown={(e) => handleKeyDown(e, completedTask.sort_order, index)}
+                                                            ref={(node) => {
+                                                                const map = getMap();
+                                                                if (node) {
+                                                                    map.set(completedTask.sort_order, node);
+                                                                } else {
+                                                                    map.delete(completedTask.sort_order);
+                                                                }
+                                                            }}
+                                                        />
+                                                        <button
+                                                            className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
+                                                            onClick={(e) => handleItemDelete(e, completedTask.sort_order)}
+                                                        >
+                                                            <RxCross1 size={18} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
 
+                                </>
+                            )}
+                        </div>
                         {editNote && (
-                            <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                                <textarea id="message" className="block p-2.5 w-full text-sm rounded-lg border"></textarea>
+                            <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 sm:max-w-4xl mx-auto">
+                                <textarea
+                                    id="message"
+                                    className="block p-2.5 w-full h-48 text-sm rounded-lg border border-gray-300"
+                                    value={editNote.body}
+                                ></textarea>
                             </div>
                         )}
-
-                        <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <div className="mt-6 flex justify-end space-x-2">
                             <button
-                                type="button"
-                                data-autofocus
-                                onClick={handleNoteSave}
-                                className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
-                            >
-                                Save
-                            </button>
-                            <button
-                                type="button"
                                 onClick={() => setOpen(false)}
-                                className="mt-3 inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-500 sm:mt-0 sm:w-auto"
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
                             >
                                 Close
+                            </button>
+                            <button
+                                onClick={handleNoteSave}
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                            >
+                                Save
                             </button>
                         </div>
                     </DialogPanel>
                 </div>
             </div>
         </Dialog>
-    )
+    );
 }
