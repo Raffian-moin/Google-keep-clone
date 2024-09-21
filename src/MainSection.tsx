@@ -26,6 +26,7 @@ const MainSection = () => {
     const [notes, setNotes] = useImmer<Notes[]>([]);
     const dropdownRef = useRef<null | HTMLDivElement>(null);
     const [noteCheckBoxes, setNoteCheckBoxes] = useImmer([]);
+    const [selectedNotes, setSelectedNotes] = useImmer<number[]>([]);
 
     const handleNoteArea = () => {
         setOpenAddNoteModal(true);
@@ -44,21 +45,42 @@ const MainSection = () => {
 
     const handleNoteEdit = (e, noteID) => {
         e.stopPropagation();
-        setOpenEditNoteModal(true);
-        setNoteCheckBoxes([]);
-        setEditNote(null);
-        const note = JSONNoteData.find((item) => item.id === noteID);
-        if (note.is_checkbox) {
-            setNoteCheckBoxes(note.body)
+        if (selectedNotes.includes(noteID)) {
+            setSelectedNotes(draft => {
+                const index = draft.findIndex(id => id === noteID);
+                if (index !== -1) draft.splice(index, 1);
+            });
+        } else if (selectedNotes.length > 0) {
+            setSelectedNotes(draft => {
+                draft.push(noteID);
+            });
         } else {
-            setEditNote(note);
+            setOpenEditNoteModal(true);
+            setNoteCheckBoxes([]);
+            setEditNote(null);
+            const note = JSONNoteData.find((item) => item.id === noteID);
+            if (note.is_checkbox) {
+                setNoteCheckBoxes(note.body)
+            } else {
+                setEditNote(note);
+            }
         }
 
     }
 
-    const handleSelectNote = (e, noteID) => {
+    const handleNoteSelection = (e, noteID) => {
         e.stopPropagation();
-        console.log('selected notes');
+        if (selectedNotes.includes(noteID)) {
+            setSelectedNotes(draft => {
+                const index = draft.findIndex(id => id === noteID);
+                if (index !== -1) draft.splice(index, 1);
+            });
+        } else {
+            setSelectedNotes(draft => {
+                draft.push(noteID);
+            });
+        }
+
     }
 
     const handleDeleteNote = (e, noteID) => {
@@ -98,7 +120,7 @@ const MainSection = () => {
     );
 
     const NoteIcons = ({ noteID }) => (
-        <div className="flex justify-between items-center mt-2 text-gray-500">
+        <div className="flex justify-between items-center mt-2 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <IconWrapper onClick={(e) => handleIconClick(e, { values: "REMINDER", noteid: noteID })}>
                 <BsBellFill className="cursor-pointer hover:text-gray-700" />
             </IconWrapper>
@@ -147,15 +169,21 @@ const MainSection = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {notes.map((note) => (
                         <div key={note.id} className="relative group" onClick={(e) => handleNoteEdit(e, note.id)}>
-                            <div className="absolute -top-2 -left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={(e) => handleSelectNote(e, note.id)}>
+                            <div
+                                className={`absolute -top-2 -left-2 z-10 transition-opacity duration-200 ${selectedNotes.includes(note.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                                onClick={(e) => handleNoteSelection(e, note.id)}
+                            >
                                 <div className="bg-black rounded-full p-1 shadow-md">
-                                    <BsCheck className="text-white text-xl" />
+                                    <BsCheck className={`${selectedNotes.includes(note.id) ? 'text-neutral-500' : 'text-white'} text-xl`} />
                                 </div>
                             </div>
-                            <div className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
+                            <div className={`bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 ${selectedNotes.includes(note.id) ? 'ring-2 ring-current' : ''
+                                }`}>
                                 <h2 className="text-xl font-semibold mb-2">{note.title}</h2>
                                 <p className="text-gray-600">{note.is_checkbox === false ? note.body.replace(/^(.{200}[^\s]*).*/, "$1") : ''}</p>
-                                <NoteIcons noteID={note.id} />
+                                {(selectedNotes.length === 0) && (
+                                    <NoteIcons noteID={note.id} />
+                                )}
                             </div>
                         </div>
                     ))}
