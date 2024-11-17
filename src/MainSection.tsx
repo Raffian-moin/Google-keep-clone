@@ -91,6 +91,19 @@ const MainSection = () => {
         });
     }
 
+    const handleMakeNoteCopy = (e, noteID) => {
+        e.stopPropagation();
+        // Make API call to store the copied note
+        // use ID of note that is returned from API
+        setNotes((draft) => {
+            const noteToBeCopied = draft.find((item) => item.id === noteID);
+            // FIXME: When implemented API call, ID should be ID of return data
+            const CopiedNote = {...noteToBeCopied};
+            CopiedNote.id = Math.random();
+            draft.push(CopiedNote);
+        });
+    }
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -145,7 +158,7 @@ const MainSection = () => {
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={(e) => handleDeleteNote(e, noteID)}>Delete note</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Add label</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Add drawing</button>
-                        <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Make a copy</button>
+                        <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={(e) => handleMakeNoteCopy(e, noteID)}>Make a copy</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Show tick boxes</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Copy to Google Docs</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Version history</button>
