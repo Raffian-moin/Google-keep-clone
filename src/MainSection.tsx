@@ -58,7 +58,7 @@ const MainSection = () => {
             setOpenEditNoteModal(true);
             setNoteCheckBoxes([]);
             setEditNote(null);
-            const note = JSONNoteData.find((item) => item.id === noteID);
+            const note = notes.find((item) => item.id === noteID);
             if (note.is_checkbox) {
                 setNoteCheckBoxes(note.body)
             } else {
@@ -98,8 +98,11 @@ const MainSection = () => {
         setNotes((draft) => {
             const noteToBeCopied = draft.find((item) => item.id === noteID);
             // FIXME: When implemented API call, ID should be ID of return data
-            const CopiedNote = {...noteToBeCopied};
-            CopiedNote.id = Math.random();
+            const CopiedNote = {
+                ...noteToBeCopied,
+                id: Math.random(),
+                body: [...noteToBeCopied.body]
+             };
             draft.push(CopiedNote);
         });
     }
