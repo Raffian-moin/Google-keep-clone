@@ -5,7 +5,11 @@ A Google Keep clone using ReactJS, TypeScript and Laravel
 ![image info](./project_files/homepage.png)
 
 ## Todos
- - Make copy of the note
+ - Make copy of the note ✅
+ - Save copied note in database
+ - Add Checkbox notes in Add modal ✅
+ - Make common component for add and manage checkbox notes for Add and Edit component
+ - While switching from checkbox to text on add mode, warn user if they want to keep/delete the completed checkboxes
  - Reorder notes in main section
  - Reorder checkboxes inside note
  - Reminder of notes

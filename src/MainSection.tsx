@@ -4,7 +4,6 @@ import { BsBellFill, BsCheck, BsImageFill, BsPaletteFill, BsPersonPlusFill, BsTh
 import { useImmer } from 'use-immer';
 import AddNote from "./modal/AddNote";
 import EditNote from "./modal/EditNote";
-import JSONNoteData from './data.json'
 
 const MainSection = () => {
     interface Notes {
@@ -121,7 +120,61 @@ const MainSection = () => {
     }, []);
 
     useEffect(() => {
-        setNotes(JSONNoteData);
+        setNotes([
+            {
+                "id": 1,
+                "title": "Learning music",
+                "body": [
+                    {
+                        "sort_order": 1,
+                        "item": "practice scales",
+                        "is_checked": false
+                    },
+                    {
+                        "sort_order": 2,
+                        "item": "learn music theory",
+                        "is_checked": false
+                    },
+                    {
+                        "sort_order": 3,
+                        "item": "practice chord progressions",
+                        "is_checked": false
+                    },
+                    {
+                        "sort_order": 4,
+                        "item": "improve sight-reading",
+                        "is_checked": true
+                    },
+                    {
+                        "sort_order": 5,
+                        "item": "ear training exercises",
+                        "is_checked": false
+                    },
+                    {
+                        "sort_order": 6,
+                        "item": "practice improvisation",
+                        "is_checked": true
+                    },
+                    {
+                        "sort_order": 7,
+                        "item": "learn a new song",
+                        "is_checked": true
+                    },
+                    {
+                        "sort_order": 8,
+                        "item": "attend a music workshop",
+                        "is_checked": false
+                    }
+                ],
+                "is_checkbox": true
+            },
+            {
+                "id": 2,
+                "title": "Intro to Wormhole",
+                "body": "Wormholes are theoretical passages through space-time that could create shortcuts between distant parts of the universe. They are often discussed in the context of Einstein’s theory of general relativity, where they are sometimes referred to as Einstein-Rosen bridges. There are different types of wormholes, with traversable wormholes being the most intriguing for space travel. To keep a wormhole open, it would require exotic matter, which has negative energy, a concept not yet proven to exist. Wormholes could potentially allow faster-than-light travel or even time travel, leading to interesting possibilities and paradoxes. One challenge is that most theoretical wormholes are highly unstable and would collapse before anything could pass through them. The Morris-Thorne metric is a famous equation used to describe traversable wormholes in general relativity. In quantum mechanics, wormholes have been speculated to connect distant points, but this is still largely theoretical. Though wormholes are a popular subject in science fiction, there is currently no observational evidence that they exist. However, ongoing research in physics and cosmology keeps the possibility of discovering or even creating a wormhole alive in future science.",
+                "is_checkbox": false
+            }
+        ]);
     }, []);
 
     const toggleDropdown = (noteId: number, event: React.SyntheticEvent) => {
@@ -205,7 +258,13 @@ const MainSection = () => {
                     ))}
                 </div>
             </main>
-            <AddNote open={openAddNoteModal} setOpen={setOpenAddNoteModal} />
+
+            <AddNote
+                open={openAddNoteModal}
+                setOpen={setOpenAddNoteModal}
+                setNotes={setNotes}
+            />
+            
             <EditNote
                 open={openEditNoteModal}
                 setOpen={setOpenEditNoteModal}
