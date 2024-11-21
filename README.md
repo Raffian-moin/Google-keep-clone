@@ -10,6 +10,7 @@ A Google Keep clone using ReactJS, TypeScript and Laravel
  - Add Checkbox notes in Add modal ✅
  - Make common component for add and manage checkbox notes for Add and Edit component
  - While switching from checkbox to text on add mode, warn user if they want to keep/delete the completed checkboxes
+ - Reset the modal when modal is closed ✅
  - Reorder notes in main section
  - Reorder checkboxes inside note
  - Reminder of notes
@@ -26,3 +27,5 @@ A Google Keep clone using ReactJS, TypeScript and Laravel
     - Live collaboration and editing
  - Add background color to notes
  - Website settings (e.g. Reminder times, Disable/Enable sharing)
+ - Fix: on add mode of checkbox if enter is pressed new input box is not inserted ✅
+ - Fix: on Add mode when switch to checkbox from empty text and trying type throws error ✅

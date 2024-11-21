@@ -51,7 +51,12 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
         e.stopPropagation();
         const character = e.target.value
         if (character) {
-            const sortOrder = noteCheckBoxes[noteCheckBoxes.length - 1].sort_order + 1;
+            let sortOrder = 1;
+
+            if (noteCheckBoxes.length > 0) {
+                sortOrder = noteCheckBoxes[noteCheckBoxes.length - 1].sort_order + 1;
+            }
+
             setNoteCheckBoxes((draft) => {
                 draft.push({ sort_order: sortOrder, item: character, is_checked: false });
             });
@@ -91,7 +96,7 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
         if (e.key === "Enter") {
             // If user hits enter on incompleted last input field then do not add a new field below
             // because there is already an open input field
-            if (incompletedTasks[incompletedTasks.length - 1].sort_order === checkboxID) {
+            if (uncompletedTasks[uncompletedTasks.length - 1].sort_order === checkboxID) {
                 addNewItemRef.current.focus();
             } else {
                 // always add a new input field
@@ -171,7 +176,8 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
                 }
             });
 
-            setNoteCheckBoxes(checkboxItems)
+            setNoteCheckBoxes(checkboxItems);
+            SetTextAreaValue('');
         } else {
             // Reverse condition of if condition
 
@@ -217,18 +223,30 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
         </div>
     );
 
+    const handleTextAreaValue = (e) => {
+        e.stopPropagation();
+        SetTextAreaValue(e.target.value)
+    }
+
+    const handleClose = () => {
+        if (isCheckBoxNote) {
+            setNoteCheckBoxes([]);
+            setIsCheckBoxNote(false)
+        } else {
+            SetTextAreaValue('');
+        }
+
+        setOpen(false);
+    }
+
     const IconWrapper = ({ children, onClick }) => (
         <div className="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200" onClick={onClick}>
             {children}
         </div>
     );
 
-    const handleTextAreaValue = (e) => {
-        SetTextAreaValue(e.target.value)
-    }
-
     return (
-        <Dialog open={open} onClose={setOpen} className="relative z-10">
+        <Dialog open={open} onClose={handleClose} className="relative z-10">
             <DialogBackdrop
                 transition
                 className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
