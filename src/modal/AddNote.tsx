@@ -1,7 +1,7 @@
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { useEffect, useRef } from 'react';
 import { BiSolidArchiveIn } from "react-icons/bi";
-import { BsBellFill, BsCheck, BsImageFill, BsPaletteFill, BsPersonPlusFill, BsThreeDotsVertical } from "react-icons/bs";
+import { BsBellFill, BsImageFill, BsPaletteFill, BsPersonPlusFill, BsThreeDotsVertical } from "react-icons/bs";
 import { GoChevronDown, GoChevronRight } from 'react-icons/go';
 import { RxCross1 } from 'react-icons/rx';
 import { useImmer } from 'use-immer';
@@ -22,18 +22,7 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
     const [isCompletedTasksCollapsed, SetIsCompletedTasksCollapsed] = useImmer(false);
     const [textAreaValue, SetTextAreaValue] = useImmer('');
     const [currentCheckboxID, SetCurrentCheckboxID] = useImmer(null);
-
-    const handleNoteSave = () => {
-        setNotes((draft) => {
-            draft.push({
-                id: Math.random(),
-                title: "Beyond Solar system",
-                body: isCheckBoxNote ? noteCheckBoxes : textAreaValue,
-                is_checkbox: isCheckBoxNote ? true : false
-            });
-        });
-        setOpen(false)
-    }
+    const [openCheckboxKeepModal, setOpenCheckboxKeepModal] = useImmer<boolean>(false);
 
     let uncompletedTasks = [];
     let completedTasks = [];
@@ -41,6 +30,20 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
     if (noteCheckBoxes.length > 0) {
         uncompletedTasks = (noteCheckBoxes.filter((item) => item.is_checked === false));
         completedTasks = (noteCheckBoxes.filter((item) => item.is_checked === true));
+    }
+
+    const handleNoteSave = () => {
+        if (noteCheckBoxes.length > 0 || textAreaValue) {
+            setNotes((draft) => {
+                draft.push({
+                    id: Math.random(),
+                    title: "Beyond Solar system",
+                    body: isCheckBoxNote ? noteCheckBoxes : textAreaValue,
+                    is_checkbox: isCheckBoxNote ? true : false
+                });
+            });
+            setOpen(false)
+        }
     }
 
     const toggleDropdown = (event: React.SyntheticEvent) => {
@@ -157,13 +160,14 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
     }
 
     const handleShowCheckBox = () => {
-        setIsCheckBoxNote((prevState) => !prevState);
         setActiveDropdown((prevState) => !prevState);
 
         // Here isCheckBoxNote is previous state value
         // So if previous value is false then for this call of the
         // function is true. So !isCheckBoxNote means that it is true as we toggle
         if (!isCheckBoxNote) {
+            setIsCheckBoxNote((prevState) => !prevState);
+
             const splittedTextItems = textAreaValue.split(/\r?\n/);
 
             const checkboxItems = [];
@@ -182,12 +186,25 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
         } else {
             // Reverse condition of if condition
 
-            let convertedTextAreaValueFromCheckboxes = ''
-            noteCheckBoxes.forEach((noteCheckBox) => {
-                convertedTextAreaValueFromCheckboxes += `${noteCheckBox.item}\n`;
-            });
-            SetTextAreaValue(convertedTextAreaValueFromCheckboxes);
+            // If there is no completed checkbox, then just transform to text else show warning modal
+            if (!noteCheckBoxes.some((item) => item.is_checked)) {
+                setIsCheckBoxNote((prevState) => !prevState);
+                transformCheckboxesToText(noteCheckBoxes);
+            } else {
+                setOpenCheckboxKeepModal(true);
+            }
+
         }
+
+    }
+
+    const transformCheckboxesToText = (noteCheckBoxes) => {
+        let convertedTextAreaValueFromCheckboxes = ''
+        noteCheckBoxes.forEach((noteCheckBox) => {
+            convertedTextAreaValueFromCheckboxes += `${noteCheckBox.item}\n`;
+        });
+        SetTextAreaValue(convertedTextAreaValueFromCheckboxes);
+    }
 
     const handleUncheckAllItems = () => {
         setNoteCheckBoxes((draft) => {
@@ -222,6 +239,21 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
+
+    const handleDeleteCompletedCheckboxes = () => {
+        setIsCheckBoxNote((prevState) => !prevState);
+
+        const uncompletedItems = noteCheckBoxes.filter((item) => item.is_checked === false);
+
+        transformCheckboxesToText(uncompletedItems);
+        setOpenCheckboxKeepModal(false);
+    }
+
+    const handleKeepCompletedCheckboxes = () => {
+        setIsCheckBoxNote((prevState) => !prevState);
+        transformCheckboxesToText(noteCheckBoxes);
+        setOpenCheckboxKeepModal(false);
+    }
 
     const NoteIcons = () => (
         <div className="flex justify-between items-center mt-2 text-gray-500">
@@ -284,153 +316,196 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
     );
 
     return (
-        <Dialog open={open} onClose={handleClose} className="relative z-10">
-            <DialogBackdrop
-                transition
-                className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
-            />
+        <>
+            <Dialog open={open} onClose={handleClose} className="relative z-10">
+                <DialogBackdrop
+                    transition
+                    className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
+                />
 
-            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-                <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <DialogPanel
-                        transition
-                        className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-lg data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
-                    >
-                        <div className="mt-2 space-y-2">
-                            {isCheckBoxNote && (
-                                <>
-                                    {uncompletedTasks.map((checkbox, index) => (
-                                        <div key={checkbox.sort_order} className="flex items-center space-x-2 border">
-                                            <div className="flex items-center justify-center pl-3">
+                <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+                    <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <DialogPanel
+                            transition
+                            className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-lg data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
+                        >
+                            <div className="mt-2 space-y-2">
+                                {isCheckBoxNote && (
+                                    <>
+                                        {uncompletedTasks.map((checkbox, index) => (
+                                            <div key={checkbox.sort_order} className="flex items-center space-x-2 border">
+                                                <div className="flex items-center justify-center pl-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                        onClick={(e) => handleCheckBox(e, checkbox.sort_order)}
+                                                    />
+                                                </div>
                                                 <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                                    onClick={(e) => handleCheckBox(e, checkbox.sort_order)}
+                                                    type="text"
+                                                    className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
+                                                    value={checkbox.item}
+                                                    onChange={(e) => handleItemChange(e, checkbox.sort_order)}
+                                                    onKeyDown={(e) => handleKeyDown(e, checkbox.sort_order, index)}
+                                                    ref={(node) => {
+                                                        const map = getMap();
+                                                        if (node) {
+                                                            map.set(checkbox.sort_order, node);
+                                                        } else {
+                                                            map.delete(checkbox.sort_order);
+                                                        }
+                                                    }}
                                                 />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0"
-                                                value={checkbox.item}
-                                                onChange={(e) => handleItemChange(e, checkbox.sort_order)}
-                                                onKeyDown={(e) => handleKeyDown(e, checkbox.sort_order, index)}
-                                                ref={(node) => {
-                                                    const map = getMap();
-                                                    if (node) {
-                                                        map.set(checkbox.sort_order, node);
-                                                    } else {
-                                                        map.delete(checkbox.sort_order);
-                                                    }
-                                                }}
-                                            />
-                                            <button
-                                                className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
-                                                onClick={(e) => handleItemDelete(e, checkbox.sort_order)}
-                                            >
-                                                <RxCross1 size={18} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    <div className="border">
-                                        <input
-                                            ref={addNewItemRef}
-                                            type="text"
-                                            placeholder="List item"
-                                            onChange={(e) => handleAddNewItem(e)}
-                                            className="w-full text-sm focus:outline-none px-4 py-2"
-                                        />
-                                    </div>
-                                    {completedTasks.length > 0 && (
-                                        <>
-                                            <hr className="my-4 border-gray-200" />
-                                            <div className="mt-2 space-y-2">
                                                 <button
-                                                    onClick={(e) => handleCompletedTaskSectionCollapse(e)}
-                                                    className="flex items-center text-sm font-medium text-gray-900"
+                                                    className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
+                                                    onClick={(e) => handleItemDelete(e, checkbox.sort_order)}
                                                 >
-                                                    {isCompletedTasksCollapsed ? (
-                                                        <GoChevronDown />
-                                                    ) :
-                                                        <GoChevronRight />
-                                                    }
-                                                    <span className="ml-2">
-                                                        {completedTasks.length} completed item(s)
-                                                    </span>
+                                                    <RxCross1 size={18} />
                                                 </button>
-
-                                                {isCompletedTasksCollapsed && completedTasks.map((completedTask, index) => (
-                                                    <div key={completedTask.sort_order} className="flex items-center space-x-2 border">
-                                                        <div className="flex items-center justify-center pl-3">
-                                                            <input
-                                                                type="checkbox"
-                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                                                onChange={(e) => handleCheckBox(e, completedTask.sort_order)}
-                                                                checked={true}
-                                                            />
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0 line-through"
-                                                            value={completedTask.item}
-                                                            onChange={(e) => handleItemChange(e, completedTask.sort_order)}
-                                                            onKeyDown={(e) => handleKeyDown(e, completedTask.sort_order, index)}
-                                                            ref={(node) => {
-                                                                const map = getMap();
-                                                                if (node) {
-                                                                    map.set(completedTask.sort_order, node);
-                                                                } else {
-                                                                    map.delete(completedTask.sort_order);
-                                                                }
-                                                            }}
-                                                        />
-                                                        <button
-                                                            className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
-                                                            onClick={(e) => handleItemDelete(e, completedTask.sort_order)}
-                                                        >
-                                                            <RxCross1 size={18} />
-                                                        </button>
-                                                    </div>
-                                                ))}
                                             </div>
-                                        </>
-                                    )}
+                                        ))}
+                                        <div className="border">
+                                            <input
+                                                ref={addNewItemRef}
+                                                type="text"
+                                                placeholder="List item"
+                                                onChange={(e) => handleAddNewItem(e)}
+                                                className="w-full text-sm focus:outline-none px-4 py-2"
+                                            />
+                                        </div>
+                                        {completedTasks.length > 0 && (
+                                            <>
+                                                <hr className="my-4 border-gray-200" />
+                                                <div className="mt-2 space-y-2">
+                                                    <button
+                                                        onClick={(e) => handleCompletedTaskSectionCollapse(e)}
+                                                        className="flex items-center text-sm font-medium text-gray-900"
+                                                    >
+                                                        {isCompletedTasksCollapsed ? (
+                                                            <GoChevronDown />
+                                                        ) :
+                                                            <GoChevronRight />
+                                                        }
+                                                        <span className="ml-2">
+                                                            {completedTasks.length} completed item(s)
+                                                        </span>
+                                                    </button>
 
-                                </>
-                            )}
-                        </div>
+                                                    {isCompletedTasksCollapsed && completedTasks.map((completedTask, index) => (
+                                                        <div key={completedTask.sort_order} className="flex items-center space-x-2 border">
+                                                            <div className="flex items-center justify-center pl-3">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                    onChange={(e) => handleCheckBox(e, completedTask.sort_order)}
+                                                                    checked={true}
+                                                                />
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                className="flex-grow px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none focus:ring-0 line-through"
+                                                                value={completedTask.item}
+                                                                onChange={(e) => handleItemChange(e, completedTask.sort_order)}
+                                                                onKeyDown={(e) => handleKeyDown(e, completedTask.sort_order, index)}
+                                                                ref={(node) => {
+                                                                    const map = getMap();
+                                                                    if (node) {
+                                                                        map.set(completedTask.sort_order, node);
+                                                                    } else {
+                                                                        map.delete(completedTask.sort_order);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <button
+                                                                className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
+                                                                onClick={(e) => handleItemDelete(e, completedTask.sort_order)}
+                                                            >
+                                                                <RxCross1 size={18} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
 
-                        { !isCheckBoxNote && (
-                            <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 sm:max-w-4xl mx-auto">
-                                <textarea
-                                    id="message"
-                                    className="block p-2.5 w-full h-48 text-sm rounded-lg border border-gray-300"
-                                    value={textAreaValue}
-                                    onChange={(e) => handleTextAreaValue(e)}
-                                ></textarea>
+                                    </>
+                                )}
                             </div>
-                        )}
 
-                        <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                            <button
-                                type="button"
-                                onClick={() => setOpen(false)}
-                                className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
-                            >
-                                Close
-                            </button>
-                            <button
-                                type="button"
-                                data-autofocus
-                                onClick={handleNoteSave}
-                                className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                            >
-                                Save
-                            </button>
-                        </div>
-                        <NoteIcons />
-                    </DialogPanel>
+                            {!isCheckBoxNote && (
+                                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 sm:max-w-4xl mx-auto">
+                                    <textarea
+                                        id="message"
+                                        className="block p-2.5 w-full h-48 text-sm rounded-lg border border-gray-300"
+                                        value={textAreaValue}
+                                        onChange={(e) => handleTextAreaValue(e)}
+                                    ></textarea>
+                                </div>
+                            )}
+
+                            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                <button
+                                    type="button"
+                                    onClick={handleClose}
+                                    className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+                                >
+                                    Close
+                                </button>
+                                <button
+                                    type="button"
+                                    data-autofocus
+                                    onClick={handleNoteSave}
+                                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                            <NoteIcons />
+                        </DialogPanel>
+                    </div>
                 </div>
-            </div>
-        </Dialog>
+            </Dialog>
+
+
+            {completedTasks.length > 0 && (
+                <Dialog open={openCheckboxKeepModal} onClose={() => setOpenCheckboxKeepModal(false) } className="relative z-10">
+                    <DialogBackdrop
+                        transition
+                        className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in"
+                    />
+
+                    <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+                        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                            <DialogPanel
+                                transition
+                                className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-lg data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
+                            >
+                                <div>Delete checked items</div>
+
+                                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteCompletedCheckboxes}
+                                        className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+                                    >
+                                        Delete
+                                    </button>
+                                    <button
+                                        type="button"
+                                        data-autofocus
+                                        onClick={handleKeepCompletedCheckboxes}
+                                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                    >
+                                        Keep
+                                    </button>
+                                </div>
+                            </DialogPanel>
+                        </div>
+                    </div>
+                </Dialog>
+            )}
+
+        </>
+
     )
 }
