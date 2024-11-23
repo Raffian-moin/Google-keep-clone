@@ -15,6 +15,7 @@ type Props = {
 export default function AddNote({ open, setOpen, setNotes }: Props) {
     const addNewItemRef = useRef(null);
     const noteCheckBoxItemRef = useRef(null);
+    const dropdownRef = useRef<null | HTMLDivElement>(null);
     const [activeDropdown, setActiveDropdown] = useImmer<boolean>(false);
     const [isCheckBoxNote, setIsCheckBoxNote] = useImmer<boolean>(false);
     const [noteCheckBoxes, setNoteCheckBoxes] = useImmer([]);
@@ -188,8 +189,39 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
             SetTextAreaValue(convertedTextAreaValueFromCheckboxes);
         }
 
+    const handleUncheckAllItems = () => {
+        setNoteCheckBoxes((draft) => {
+            draft.map((item) => {
+                if (item.is_checked === true) {
+                    item.is_checked = false;
+                }
+                return item;
+            });
+        });
+
+        setActiveDropdown(false);
     }
 
+    const handleDeleteCheckedItems = () => {
+        setNoteCheckBoxes((draft) => {
+            return draft.filter((item) => item.is_checked === false);
+        });
+
+        setActiveDropdown(false)
+    }
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setActiveDropdown(null);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const NoteIcons = () => (
         <div className="flex justify-between items-center mt-2 text-gray-500">
@@ -212,9 +244,15 @@ export default function AddNote({ open, setOpen, setNotes }: Props) {
                 <BsThreeDotsVertical className="cursor-pointer hover:text-gray-700" />
             </IconWrapper>
             {activeDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10" ref={dropdownRef}>
                     <div className="py-1">
-                        <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={handleShowCheckBox}>Show checkboxes</button>
+                        {isCheckBoxNote && completedTasks.length > 0 && (
+                            <>
+                                <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={handleUncheckAllItems}>Uncheck all items</button>
+                                <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={handleDeleteCheckedItems}>Delete checked items</button>
+                            </>
+                        )}
+                        <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={handleShowCheckBox}>{isCheckBoxNote ? "Hide Checkboxes" : "Show checkboxes"}</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Add label</button>
                         <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Add drawing</button>
                     </div>
