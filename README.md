@@ -5,12 +5,8 @@ A Google Keep clone using ReactJS, TypeScript and Laravel
 ![image info](./project_files/homepage.png)
 
 ## Todos
- - Make copy of the note ✅
  - Save copied note in database
- - Add Checkbox notes in Add modal ✅
  - Make common component for add and manage checkbox notes for Add and Edit component
- - While switching from checkbox to text on add mode, warn user if they want to keep/delete the completed checkboxes ✅
- - Reset the modal when modal is closed ✅
  - Reorder notes in main section
  - Reorder checkboxes inside note
  - Reminder of notes
@@ -28,5 +24,22 @@ A Google Keep clone using ReactJS, TypeScript and Laravel
  - Add background color to notes
  - Website settings (e.g. Reminder times, Disable/Enable sharing)
  - Add github workflows
+ - On click outside, unselect all the selected notes in main section
+ - Fix: For text notes, show checkboxes don't work
+ - Archived notes are not showing in archived section
+ - Show pin icon when hover on note in main section
+ - Add pinned and general section in main section
+ - Should have ordering for pinned and general notes
+ - Autocomplete words when typing
+ - Customization of autocomplete feature for users
+ - Add search functionality in header
+ - Don't allow duplicate labels
+ - Folder for notes
+ - Add label by typing # on note
+ - Resolve conflicts for live editing of shared notes, Ot, crdt
  - Fix: on add mode of checkbox if enter is pressed new input box is not inserted ✅
  - Fix: on Add mode when switch to checkbox from empty text and trying type throws error ✅
+ - While switching from checkbox to text on add mode, warn user if they want to keep/delete the completed checkboxes ✅
+ - Reset the modal when modal is closed ✅
+ - Add Checkbox notes in Add modal ✅
+ - Make copy of the note ✅
